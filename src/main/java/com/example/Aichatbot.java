@@ -1,4 +1,6 @@
 
+package com.example;
+
 import javax.sound.sampled.*;
 import java.io.IOException;
 import java.lang.reflect.Method;

@@ -56,7 +56,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Twosum</mainClass>
+                            <mainClass>com.example.Twosum</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -70,7 +70,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Twosum</mainClass>
+                            <mainClass>com.example.Twosum</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
