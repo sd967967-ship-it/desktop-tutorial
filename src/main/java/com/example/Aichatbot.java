@@ -4,12 +4,14 @@ package com.example;
 import javax.sound.sampled.*;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Aichatbot {
 
    private static final String MODEL_PATH = "D:\\vosk-model-small-en-us-0.15";
     
     private static final float SAMPLE_RATE = 16000.0f;
+    private static final int VOICE_LEVEL_THRESHOLD = 500;
 
     
 
@@ -89,24 +91,31 @@ public class Aichatbot {
                 System.out.println("Press ENTER to stop.");
                 System.out.println("--------------------------------");
 
+                AtomicBoolean stopRequested = new AtomicBoolean(false);
+
                 // Thread responsible for stopping recognition.
                 Thread stopThread = new Thread(() -> {
                     try {
-                        System.in.read();
+                        int input;
+                        while ((input = System.in.read()) != -1) {
+                            if (input == '\n' || input == '\r') {
+                                stopRequested.set(true);
+                                microphone.stop();
+                                break;
+                            }
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
-                    microphone.stop();
                 });
 
                 stopThread.start();
 
                 // Buffer for microphone data.
                 byte[] buffer = new byte[4096];
+                                long lastLevelReport = System.currentTimeMillis();
 
-                while (microphone.isOpen() &&
-                       microphone.isActive()) {
+                  while (microphone.isOpen() && !stopRequested.get()) {
 
                     int bytesRead =
                             microphone.read(
@@ -117,6 +126,21 @@ public class Aichatbot {
 
                     if (bytesRead <= 0) {
                         continue;
+                    }
+
+                    int peak = 0;
+                    for (int index = 0; index + 1 < bytesRead; index += 2) {
+                        int sample = Math.abs((short) ((buffer[index + 1] << 8)
+                                | (buffer[index] & 0xff)));
+                        peak = Math.max(peak, sample);
+                    }
+                    if (System.currentTimeMillis() - lastLevelReport >= 1000) {
+                        String voiceStatus = peak >= VOICE_LEVEL_THRESHOLD
+                            ? "VOICE DETECTED"
+                            : "NO VOICE";
+                        System.out.printf("\rMic: %-14s level: %5d    ",
+                            voiceStatus, peak);
+                        lastLevelReport = System.currentTimeMillis();
                     }
 
                     // Send microphone data to Vosk.
@@ -221,11 +245,52 @@ public class Aichatbot {
             throws ReflectiveOperationException {
         for (Method method : target.getClass().getMethods()) {
             if (method.getName().equals(name)
-                    && method.getParameterCount() == args.length) {
+                    && method.getParameterCount() == args.length
+                    && areCompatible(method.getParameterTypes(), args)) {
                 return method.invoke(target, args);
             }
         }
         throw new NoSuchMethodException(name);
+    }
+
+    private static boolean areCompatible(Class<?>[] parameterTypes, Object[] args) {
+        for (int index = 0; index < parameterTypes.length; index++) {
+            if (args[index] == null || !wrap(parameterTypes[index]).isInstance(args[index])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Class<?> wrap(Class<?> type) {
+        if (!type.isPrimitive()) {
+            return type;
+        }
+        if (type == int.class) {
+            return Integer.class;
+        }
+        if (type == long.class) {
+            return Long.class;
+        }
+        if (type == float.class) {
+            return Float.class;
+        }
+        if (type == double.class) {
+            return Double.class;
+        }
+        if (type == boolean.class) {
+            return Boolean.class;
+        }
+        if (type == byte.class) {
+            return Byte.class;
+        }
+        if (type == short.class) {
+            return Short.class;
+        }
+        if (type == char.class) {
+            return Character.class;
+        }
+        return type;
     }
 
     private static String extractPartialResult(String json) {
