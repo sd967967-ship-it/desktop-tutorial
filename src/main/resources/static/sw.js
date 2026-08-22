@@ -32,6 +32,21 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
+  // Reference data (districts/crops): stale-while-revalidate so dropdowns work offline
+  if (url.pathname === '/api/v1/districts' || url.pathname === '/api/v1/crops') {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(cache =>
+        fetch(event.request).then(res => {
+          if (res.ok) cache.put(event.request, res.clone());
+          return res;
+        }).catch(() => cache.match(event.request).then(c => c || new Response('[]', {
+          status: 503, headers: { 'Content-Type': 'application/json' }
+        })))
+      )
+    );
+    return;
+  }
+
   // API requests: network-first, no cache fallback (queued in IndexedDB by app.js)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(

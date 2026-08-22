@@ -285,6 +285,77 @@ public class WBCropKnowledgeBase {
                 List.of("Use resistant varieties", "Preventive spraying in humid weather"),
                 true, "Late blight is extremely aggressive. Contact KVK for emergency guidance."));
 
+        // ── Rice diseases (West Bengal staple crop) ──
+        DISEASE_DB.put("Rice___Brown_spot", new DiseaseAdvisory(
+                "Brown Spot", "Fungal (Bipolaris oryzae)",
+                "Circular to oval brown spots with grey centres on leaves; can cause 'blank neck' and poor grain filling.",
+                List.of("Brown circular spots with grey centre", "Spots appear on older leaves first", "Infected grains become discoloured and lightweight"),
+                List.of("Neem oil spray (5ml/L)", "Pseudomonas fluorescens seed treatment", "Apply muriate of potash (K) to correct deficiency"),
+                List.of("Tricyclazole 75% WP @ 0.3g/L", "Edifenphos 45% EC @ 1.5ml/L"),
+                "Tricyclazole: 0.3g per litre, spray at early spotting",
+                "Wear gloves, mask and full-sleeve clothing. Wash hands after spraying.",
+                15,
+                List.of("Use certified seed and treat before sowing", "Avoid potassium deficiency", "Crop rotation", "Maintain field drainage"),
+                false, null));
+
+        DISEASE_DB.put("Rice___Leaf_blast", new DiseaseAdvisory(
+                "Blast", "Fungal (Pyricularia oryzae)",
+                "Spindle-shaped whitish-grey lesions with dark brown borders on leaves; neck and node blast cause direct yield loss.",
+                List.of("Spindle-shaped lesions on leaves", "Dark-bordered leaf spots", "Neck blast causes empty panicles"),
+                List.of("Remove infected tillers", "Avoid excessive nitrogen", "Pseudomonas fluorescens spray"),
+                List.of("Tricyclazole 75% WP @ 0.3g/L", "Isoprothiolane 40% EC @ 1.25ml/L"),
+                "Tricyclazole: 0.3g per litre; repeat after 10 days if needed",
+                "Full PPE. Do not spray near harvest — observe pre-harvest interval.",
+                15,
+                List.of("Use resistant varieties (Swarna, IR36, MTU1010)", "Treat nursery seed", "Balanced nitrogen use", "Avoid late heavy nitrogen"),
+                false, null));
+
+        DISEASE_DB.put("Rice___Hispa", new DiseaseAdvisory(
+                "Hispa (Leaf Beetle)", "Insect pest (Dicladispa armigera)",
+                "Beetle scrapes leaf tissue leaving white parallel streaks; larvae mine inside leaves, reducing photosynthesis.",
+                List.of("White scraping streaks on leaves", "Shot-hole appearance", "Reduced leaf area"),
+                List.of("Hand collection of beetles in small fields", "Neem oil (5ml/L)", "Conserve natural enemies"),
+                List.of("Cartap hydrochloride 50% SP @ 1g/L", "Fenitrothion 50% EC @ 1ml/L"),
+                "Spray when beetle count rises; target leaf whorls",
+                "Wear full PPE. Toxic to fish — do not spray near ponds/canals.",
+                14,
+                List.of("Raise clean nursery", "Avoid staggered planting", "Remove weeds from bunds"),
+                false, null));
+
+        DISEASE_DB.put("Rice___Bacterial_leaf_blight", new DiseaseAdvisory(
+                "Bacterial Leaf Blight", "Bacterial (Xanthomonas oryzae pv. oryzae)",
+                "Water-soaked yellow stripes along leaf margins that turn white; 'Kresek' wilting of young plants in severe cases.",
+                List.of("Yellow stripes from leaf tip/margin", "Water-soaked lesions", "Wilting of seedlings (kresek)"),
+                List.of("Hot-water seed treatment (52-54°C, 15 min)", "Avoid excess nitrogen", "Surface drainage of fields"),
+                List.of("Streptomycin sulphate @ 0.5g/L + Copper oxychloride @ 3g/L"),
+                "Apply at disease onset, repeat after 7 days",
+                "Wear gloves. Antibiotics require careful handling and dosage.",
+                10,
+                List.of("Use certified disease-free seed", "Resistant varieties", "Avoid overhead/flood irrigation", "Balanced fertilization"),
+                false, null));
+
+        DISEASE_DB.put("Rice___Tungro", new DiseaseAdvisory(
+                "Tungro", "Viral (Rice tungro bacilliform virus, spread by green leafhopper)",
+                "Yellow to orange leaf discolouration, severe stunting and reduced tillering. No direct cure — manage the leafhopper vector.",
+                List.of("Yellow/orange leaf discolouration", "Stunted bushy plants", "Few short panicles", "Reduced tillering"),
+                List.of("Remove and destroy infected plants", "Yellow sticky traps for leafhopper", "Neem oil to deter vectors", "Synchronised planting"),
+                List.of("Buprofezin 25% SC @ 1ml/L or Imidacloprid 17.8% SL @ 0.3ml/L (vector control only)"),
+                "Target the green leafhopper vector, not the virus. 0.3ml/L Imidacloprid.",
+                "Imidacloprid is toxic to fish and bees. Do not spray near flowering or water bodies. Full PPE.",
+                21,
+                List.of("Use resistant varieties", "Synchronised community planting", "Remove infected plants early", "Nursery insect-net covers", "Control leafhopper in nursery"),
+                true, "Tungro cannot be cured. Expert should confirm whether to rogue or replant the field."));
+
+        DISEASE_DB.put("Rice___healthy", new DiseaseAdvisory(
+                "Healthy", "None",
+                "No disease or pest symptoms detected in the rice leaf. The plant appears healthy.",
+                List.of(),
+                List.of("Continue regular monitoring", "Maintain balanced fertilization and good water management"),
+                List.of(),
+                "No treatment needed", "N/A", 0,
+                List.of("Regular field scouting", "Balanced NPK", "Proper water management"),
+                false, null));
+
         // ── Tomato diseases ──
         DISEASE_DB.put("Tomato_Early_blight", new DiseaseAdvisory(
                 "Early Blight", "Fungal (Alternaria solani)",
@@ -543,7 +614,27 @@ public class WBCropKnowledgeBase {
 
     public DiseaseAdvisory getDiseaseAdvisory(String modelClassName) {
         if (modelClassName == null) return null;
-        return DISEASE_DB.get(modelClassName);
+        DiseaseAdvisory exact = DISEASE_DB.get(modelClassName);
+        if (exact != null) return exact;
+
+        // Fallback: model class names vary (underscores, Rice___X, Tomato leaf X).
+        // Normalise and match by suffix so detections still map to an advisory.
+        String norm = normalize(modelClassName);
+        for (Map.Entry<String, DiseaseAdvisory> entry : DISEASE_DB.entrySet()) {
+            String keyNorm = normalize(entry.getKey());
+            if (keyNorm.equals(norm) || keyNorm.endsWith(norm) || norm.endsWith(keyNorm)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    private static String normalize(String value) {
+        return value.toLowerCase()
+                .replace("___", " ")
+                .replace('_', ' ')
+                .replace("-", " ")
+                .trim();
     }
 
     /**

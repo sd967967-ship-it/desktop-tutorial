@@ -8,6 +8,8 @@ const I18N = {
   onlineMode:         { en: '🌐 Online',                           bn: '🌐 অনলাইন',                           hi: '🌐 ऑनलाइन' },
 
   // ── Form labels ──────────────────────────────────────────────────
+  enterDetails:       { en: 'Enter crop details',                  bn: 'ফসলের তথ্য দিন',                     hi: 'फसल विवरण दर्ज करें' },
+  newScan:            { en: 'New',                                  bn: 'নতুন',                                hi: 'नया' },
   takePhoto:          { en: '📷 Take Photo',                       bn: '📷 ছবি তুলুন',                         hi: '📷 फोटो लें' },
   chooseGallery:      { en: '🖼 Choose from Gallery',              bn: '🖼 গ্যালারি থেকে বাছুন',               hi: '🖼 गैलरी से चुनें' },
   selectDistrict:     { en: 'Select your district',                bn: 'আপনার জেলা নির্বাচন করুন',             hi: 'अपना जिला चुनें' },
