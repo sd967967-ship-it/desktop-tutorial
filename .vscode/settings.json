@@ -7,5 +7,7 @@
         "D:/Apache NetBeans/platform/modules/ext/jna-5.19.1.jar",
         "D:/Apache NetBeans/platform/modules/ext/jna-platform-5.19.1.jar"
     ],
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.configuration.maven.userSettings": "${userHome}/.m2/settings.xml",
+    "java.compile.nullAnalysis.mode": "automatic"
 }
